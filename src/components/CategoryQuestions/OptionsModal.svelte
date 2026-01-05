@@ -1,52 +1,54 @@
-<!--
-TODO: use modal props and close return data
-
- <script>
+<script>
 	import { preventDefault } from 'svelte/legacy';
-
 	import { fly } from 'svelte/transition';
-	import { modals, onBeforeClose } from 'svelte-modals';
-	import { questionsStore } from './store';
 	import { onMount } from 'svelte';
 	import Sortable from 'sortablejs';
 	import emoji from 'emoji-name-map';
 	import { v4 as uuidv4 } from 'uuid';
 	import Required from '../Required.svelte';
-	/** @type {{isOpen: any, id: any}} */
-	let { isOpen, id } = $props();
 
-	const qIndex = $questionsStore.findIndex((v) => v.id === id);
-	const q = $state($questionsStore[qIndex]);
+	/** @type {{isOpen: boolean, close: Function, questionData: any, onSave: Function}} */
+	let { isOpen, close, questionData, onSave } = $props();
 
-	onBeforeClose(() => {
-		const temp = $questionsStore;
-		temp[qIndex] = q;
-		questionsStore.set(temp);
-		return true;
-	});
+	// Local state for editing - questionData is already plain JSON
+	let q = $state(questionData ? { ...questionData, options: [...(questionData.options || [])] } : null);
 
 	let expanded = $state(null);
 	let list = $state();
+
 	onMount(() => {
-		Sortable.create(list, {
-			animation: 300,
-			handle: '.handle',
-			dragClass: 'dragged',
-			swapThreshold: 0.5,
-			dataIdAttr: 'data-id',
-			store: {
-				set: (sortable) => {
-					const temp = [];
-					const order = sortable.toArray();
-					order.forEach((id, i) => (temp[i] = q.options.find((q) => q.id === id)));
-					q.options = temp;
+		if (list && q && q.options) {
+			Sortable.create(list, {
+				animation: 300,
+				handle: '.handle',
+				dragClass: 'dragged',
+				swapThreshold: 0.5,
+				dataIdAttr: 'data-id',
+				store: {
+					get: () => q.options.map(o => o.id),
+					set: (sortable) => {
+						const order = sortable.toArray();
+						const temp = [];
+						order.forEach((optId, i) => {
+							const opt = q.options.find((o) => o.id === optId);
+							if (opt) temp[i] = opt;
+						});
+						q.options = temp;
+					}
 				}
-			}
-		});
+			});
+		}
 	});
+
+	function save() {
+		if (q && onSave) {
+			onSave(q.options);
+		}
+		close();
+	}
 </script>
 
-{#if isOpen}
+{#if isOpen && q}
 	<div
 		role="dialog"
 		class="modal my-4 sm:my-12 md:my-24 lg:my-32 max-w-lg mx-auto"
@@ -67,7 +69,7 @@ TODO: use modal props and close return data
 						</div>
 					</div>
 					<div bind:this={list} class="list-group flex flex-col gap-2">
-						{#each q.options as o}
+						{#each q.options || [] as o}
 							<div
 								data-id={o.id}
 								class="list-group-item bg-gray-100/50 dark:bg-slate-800/50 p-4 rounded-xl"
@@ -210,7 +212,7 @@ TODO: use modal props and close return data
 						type="submit"
 						form="questionOptions"
 						class="bg-green-300 hover:bg-green-500 hover:text-white dark:bg-green-500/75 dark:hover:bg-green-500 dark:hover:text-white p-2 px-5 rounded-lg font-medium transition duration-300 disabled:cursor-not-allowed"
-						onclick={() => close(DATA)}
+						onclick={save}
 					>
 						<i class="fa-solid fa-check"></i>
 						Save
@@ -219,4 +221,4 @@ TODO: use modal props and close return data
 			</form>
 		</div>
 	</div>
-{/if} -->
+{/if}

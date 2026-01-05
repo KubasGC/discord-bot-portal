@@ -616,7 +616,7 @@
 							</div>
 						{/if}
 						<div>
-							<CategoryQuestions />
+							<CategoryQuestions {roles} />
 						</div>
 						{#if qS.questions.length < 5}
 							<div class="text-center">
@@ -636,6 +636,7 @@
 											style: 2,
 											type: null,
 											value: '',
+											allowedRoles: [],
 											_real: false
 										});
 									}}

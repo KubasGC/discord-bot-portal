@@ -6,8 +6,12 @@
 	import Sortable from 'sortablejs';
 	import TextQuestion from './TextQuestion.svelte';
 	import MenuQuestion from './MenuQuestion.svelte';
+	import UserSelectQuestion from './UserSelectQuestion.svelte';
 	import Required from '../Required.svelte';
 	import { questionsState as qS } from '../state.svelte.js';
+
+	/** @type {{roles: any[]}} */
+	let { roles = [] } = $props();
 
 	let loading = $state({});
 	let expanded = $state(null);
@@ -111,17 +115,19 @@
 										onchange={() => {
 											if (q.type === 'TEXT') q.maxLength = 1000;
 											else if (q.type === 'MENU') q.maxLength = 1;
+											else if (q.type === 'USER_SELECT') {
+												q.maxLength = 1;
+												q.allowedRoles = q.allowedRoles || [];
+											}
 										}}
 									>
 										<option value={null} class="p-1" default disabled>Select an input type</option>
 										<option value="TEXT" class="p-1"> Text </option>
-										<option
-											value="MENU"
-											class="p-1"
-											disabled
-											title="Disabled until supported by Discord"
-										>
+										<option value="MENU" class="p-1">
 											Select menu
+										</option>
+										<option value="USER_SELECT" class="p-1">
+											User select
 										</option>
 									</select>
 								</label>
@@ -131,6 +137,8 @@
 								<TextQuestion bind:question={qS.questions[i]} />
 							{:else if q.type === 'MENU'}
 								<MenuQuestion bind:question={qS.questions[i]} />
+							{:else if q.type === 'USER_SELECT'}
+								<UserSelectQuestion bind:question={qS.questions[i]} {roles} />
 							{/if}
 						</div>
 					</div>

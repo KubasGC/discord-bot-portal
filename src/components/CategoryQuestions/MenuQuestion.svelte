@@ -1,9 +1,20 @@
 <script>
 	import { modals } from 'svelte-modals';
-	// import OptionsModal from './OptionsModal.svelte';
+	import OptionsModal from './OptionsModal.svelte';
 	import Required from '../Required.svelte';
 	/** @type {{question: any}} */
 	let { question = $bindable() } = $props();
+	
+	function openOptionsModal() {
+		// Pass plain JSON data to avoid Svelte proxy issues
+		const questionData = JSON.parse(JSON.stringify(question));
+		modals.open(OptionsModal, { 
+			questionData,
+			onSave: (updatedOptions) => {
+				question.options = updatedOptions;
+			}
+		});
+	}
 
 	let _maxLength = question._maxLength; // non-reactive
 
@@ -80,7 +91,7 @@
 		<button
 			type="button"
 			class="rounded-lg px-2 font-medium text-yellow-500 transition duration-300 hover:text-yellow-300 disabled:cursor-not-allowed dark:text-yellow-500 dark:hover:text-yellow-500/50"
-			onclick={() => modals.open(OptionsModal, { id: question.id })}
+			onclick={openOptionsModal}
 		>
 			<i class="fa-solid fa-pencil"></i>
 			Edit
